@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Inventarios — Intertek</title>
+  <meta name="description" content="Aplicación de inventarios simple sin servidor"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand">Inventarios — Intertek</div>
+    <div class="spacer"></div>
+    <div id="userBox" class="userbox"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- LOGIN -->
+  <section id="loginView" class="card">
+    <h2>Iniciar sesión</h2>
+    <div class="row">
+      <div class="col-4"><label for="lg_user">Usuario</label><input id="lg_user"/></div>
+      <div class="col-4"><label for="lg_pin">PIN</label><input id="lg_pin"/></div>
+      <div class="col-4 align-end"><button id="lg_btn" class="btn primary" type="button">Entrar</button></div>
+    </div>
+    <div id="lg_msg" class="hint"></div>
+  </section>
+
+  <!-- APP -->
+  <section id="appView" class="hidden">
+    <nav class="tabs" id="tabs">
+      <button data-tab="inventario" class="tab active">Inventario</button>
+      <button data-tab="tras" class="tab">Traslados</button>
+      <button data-tab="toma" class="tab">Toma Inventario</button>
+      <button data-tab="buscar" class="tab">Buscar</button>
+      <button data-tab="rep" class="tab ghost">Reportes</button>
+      <button data-tab="admin" class="tab ghost" id="tabAdmin">Administración</button>
+    </nav>
+
+    <!-- Inventario -->
+    <section id="inventario" class="card">
+      <h2>Inventario</h2>
+      <div class="row">
+        <div class="col-4"><label for="invNombre">Nombre del equipo</label><input id="invNombre"/></div>
+        <div class="col-4"><label for="invMarca">Marca</label><input id="invMarca"/></div>
+        <div class="col-4"><label for="invModelo">Modelo</label><input id="invModelo"/></div>
+        <div class="col-3"><label for="invClase">Clase</label><select id="invClase"></select></div>
+        <div class="col-3"><label for="invFechaIng">Fecha ingreso</label><input id="invFechaIng" type="date"/></div>
+        <div class="col-3"><label for="invFechaFac">Fecha factura</label><input id="invFechaFac" type="date"/></div>
+        <div class="col-3"><label for="invNumFac">Número de factura</label><input id="invNumFac"/></div>
+        <div class="col-3"><label for="invVida">Vida útil (años)</label><input id="invVida" type="number" min="0" step="1" value="0"/></div>
+        <div class="col-3"><label for="invCodigo">Código de activo</label><input id="invCodigo" placeholder="Obligatorio"/></div>
+        <div class="col-3"><label for="invUbic">Ubicación</label><select id="invUbic"></select></div>
+        <div class="col-3"><label for="invLinea">Línea de negocio</label><select id="invLinea"></select></div>
+        <div class="col-6"><label for="invImgFile">Imagen (opcional)</label><input id="invImgFile" class="file-big" type="file" accept="image/*" capture="environment"/>
+      <div id="invPreview" class="preview" style="margin-top:8px">Sin imagen</div></div>
+        <div class="col-6"><input id="invImgUrl" style="display:none"/></div>
+        <div class="col-12 right"><button id="btnAddInv" class="btn primary">Agregar equipo</button> <button id="btnUpdateInv" class="btn success" style="display:none">Actualizar equipo</button> <button id="btnDeleteInv" class="btn danger" style="display:none">Eliminar</button> <button id="btnCancelEdit" class="btn" style="display:none">Cancelar edición</button></div>
+        <div class="col-12"><div id="invMsg" class="hint"></div></div>
+      </div>
+      <div class="hint">Validación: no permite <b>códigos de activo duplicados</b>.</div>
+      <div class="table-wrap">
+        <table class="table is-wide" id="tablaInv">
+          <thead>
+            <tr><th>Imagen</th><th>Código</th><th>Nombre</th><th>Marca</th><th>Modelo</th><th>Clase</th><th>Fecha ingreso</th><th>Fecha factura</th><th>Número factura</th><th>Vida útil</th><th>Ubicación</th><th>Línea de negocio</th><th>Obj. OK</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="right">
+        <button id="btnExportInv" class="btn yellow">Descargar inventario (Excel)</button>
+      </div>
+    </section>
+
+
+    <!-- Traslados -->
+    <section id="tras" class="card hidden">
+      <h2>Traslados de ubicación</h2>
+      <nav class="tabs" id="trasTabs">
+        <button data-subtab="trasNuevo" class="tab active">Nuevo</button>
+        <button data-subtab="trasHist" class="tab">Histórico</button>
+        <button data-subtab="trasDocs" class="tab">Documentos</button>
+      </nav>
+
+      <!-- Subtab: Nuevo traslado -->
+      <section id="trasNuevo">
+        <div class="row">
+          <div class="col-3"><label for="trasCodigo">Código activo</label><input id="trasCodigo" list="codesList" placeholder="Ej: ABC123"/><datalist id="codesList"></datalist></div>
+          <div class="col-3"><label for="trasBodegaActual">Ubicación actual</label><input id="trasBodegaActual" placeholder="Se autocompleta" disabled/></div>
+          <div class="col-3"><label for="trasBodegaDestino">Ubicación destino</label><select id="trasBodegaDestino"></select></div>
+          <div class="col-3 right"><button id="btnAgregarAMasivo" class="btn">Agregar a traslado masivo</button></div>
+          <div class="col-12"><div id="trasPreview" class="preview"></div></div>
+        </div>
+        <h3 style="margin-top:8px">Buscar equipos</h3>
+        <div class="row">
+          <div class="col-6"><label for="trasSearch">Buscar por código o nombre</label><input id="trasSearch" placeholder="Ej: ABC o TALADRO"/></div>
+          <div class="col-6 align-end"><button id="btnAgregarSeleccion" class="btn" type="button">Agregar seleccionados</button></div>
+          <div class="col-12"><div id="trasResults" class="preview">Escribe para ver resultados</div></div>
+        </div>
+        <h3>Lista de traslado masivo</h3>
+        <table class="table" id="tablaTrasSel">
+          <thead><tr><th>Código</th><th>Nombre</th><th>Ubicación origen</th><th>Ubicación destino</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="right">
+          <button id="btnGenerarTraslado" class="btn primary">Confirmar traslado</button>
+          <button id="btnImprimirTraslado" class="btn ghost">Imprimir PDF</button>
+        </div>
+        <div class="muted" id="trasDocInfo" style="margin-top:6px"></div>
+      </section>
+
+      <!-- Subtab: Histórico -->
+      <section id="trasHist" class="hidden">
+        <div class="row" style="margin-bottom:8px">
+          <div class="col-4"><label for="trasQCodigo">Código activo</label><input id="trasQCodigo" placeholder="Filtrar traslados por código"/></div>
+          <div class="col-2 align-end"><button id="btnBuscarTras" class="btn">Buscar</button></div>
+          <div class="col-3"><label for="trasQDoc">Doc traslado</label><input id="trasQDoc" placeholder="Ej: TR-20240907-0001"/></div>
+          <div class="col-3 align-end"><button id="btnImprimirDoc" class="btn primary">Imprimir por Doc</button></div>
+        </div>
+        <table class="table" id="tablaTras">
+          <thead><tr><th>Fecha</th><th>Doc</th><th>Código</th><th>Nombre</th><th>De</th><th>Para</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <!-- Subtab: Documentos -->
+      <section id="trasDocs" class="hidden">
+        <table class="table" id="tablaTrasDocs">
+          <thead><tr><th>Doc</th><th>Fecha</th><th>Items</th><th>Usuario</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+
+      <div id="printArea" class="print-area hidden"></div>
+    </section>
+
+    <!-- Toma -->
+    <section id="toma" class="card hidden">
+      <h2>Toma de inventario</h2>
+      <div class="row">
+        <div class="col-4"><label for="tomaObj">Ubicación objetivo</label><select id="tomaObj"></select></div>
+        <div class="col-4"><label for="tomaCodigo">Código (lector o teclado)</label><input id="tomaCodigo" placeholder="Escanee o escriba y Enter" list="codesList"/></div>
+        <div class="col-4 right"><label>&nbsp;</label><button id="btnTomar" class="btn primary" type="button">Registrar</button></div>
+        <div class="col-12"><div id="tomaPreview" class="preview"></div></div>
+        <div class="col-12"><div id="tomaStats" class="hint"></div></div>
+      </div>
+      <div class="right" style="margin:8px 0 12px">
+        <button id="btnImprimirToma" class="btn">Imprimir PDF</button>
+        <button id="btnExportToma" class="btn yellow">Descargar toma (Excel)</button>
+        <button id="btnExportFaltantes" class="btn">Exportar faltantes</button>
+        <button id="btnTomaDeleteSel" class="btn danger">Eliminar seleccionados</button>
+        <button id="btnActualizarUbic" class="btn success">Actualizar ubicaciones desde Toma</button>
+        <button id="btnSoloFaltantes" class="btn">Solo faltantes</button>
+        <button id="btnVerEscaneos" class="btn ghost">Ver escaneos</button>
+        <button id="btnBorrarToma" class="btn danger">Borrar toma</button>
+      </div>
+      <table class="table" id="tablaToma">
+        <thead><tr><th style="width:32px"><input type="checkbox" id="tomaPickAll"/></th><th>Fecha</th><th>Estado</th><th>Código</th><th>Nombre</th><th>Ubicación actual</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- Buscar -->
+    <section id="buscar" class="card hidden">
+      <h2>Buscar</h2>
+      <div class="row">
+        <div class="col-3"><label for="qCodigo">Código activo</label><input id="qCodigo" placeholder="Filtrar..."/></div>
+        <div class="col-3"><label for="qNombre">Nombre equipo</label><input id="qNombre" list="qNombreList" placeholder="Todos"/><datalist id="qNombreList"></datalist></div>
+        <div class="col-3"><label for="qUbic">Ubicación</label><input id="qUbic" list="qUbicList" placeholder="Todas"/><datalist id="qUbicList"></datalist></div>
+        <div class="col-3"><label for="qClase">Clase</label><input id="qClase" list="qClaseList" placeholder="Todas"/><datalist id="qClaseList"></datalist></div>
+        <div class="col-3"><label for="qLinea">Línea de negocio</label><input id="qLinea" list="qLineaList" placeholder="Todas"/><datalist id="qLineaList"></datalist></div>
+        <div class="col-12 right"><button id="btnBuscar" class="btn primary">Buscar</button></div>
+      </div>
+      <table class="table" id="tablaBusq">
+        <thead><tr><th>Imagen</th><th>Código</th><th>Nombre</th><th>Marca</th><th>Modelo</th><th>Clase</th><th>Ubicación</th><th>Línea de negocio</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="right">
+        <button id="btnExportBusq" class="btn yellow">Descargar consulta (Excel)</button>
+      </div>
+    </section>
+
+    <!-- Reportes simples -->
+    <section id="rep" class="card hidden">
+      <h2>Importar / Exportar</h2>
+      <div class="row" style="margin-bottom:8px">
+        <div class="col-6">
+          <button id="btnExportBackup" class="btn yellow">Exportar backup (.json)</button>
+        </div>
+        <div class="col-6 right">
+          <input id="fileImportBackup" type="file" accept="application/json" style="display:none"/>
+          <button id="btnImportBackup" class="btn">Importar backup (.json)</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <div class="col-6">
+          <button id="btnTemplateCSV" class="btn">Descargar plantilla CSV</button>
+        </div>
+        <div class="col-6 right">
+          <input id="fileImportCSV" type="file" accept="text/csv" style="display:none"/>
+          <button id="btnImportCSV" class="btn primary">Importar CSV</button>
+        </div>
+        <div class="col-6">
+          <label for="dirImages">Carpeta de imágenes (opcional)</label>
+          <input id="dirImages" type="file" webkitdirectory directory multiple />
+        </div>
+        <div class="col-6">
+          <label><input type="checkbox" id="chkReplace"/> Reemplazar inventario (en lugar de fusionar)</label>
+        </div>
+        <div class="col-12"><div id="repMsg" class="hint"></div></div>
+      </div>
+      <p class="muted">CSV sugerido (sin tildes): Codigo, Nombre, Marca, Modelo, Fecha ingreso, Fecha factura, Numero factura, Vida util (anios), Ubicacion, Linea de negocio, Imagen (archivo o dataURL).</p>
+    </section>
+
+    <!-- Administración -->
+    <section id="admin" class="card hidden">
+      <h2>Administración</h2>
+      <div class="row">
+        <div class="col-12"><h3>Catálogos</h3></div>
+        <div class="col-6">
+          <h4>Ubicaciones</h4>
+          <div class="row" style="margin-bottom:8px">
+            <div class="col-8"><label for="newUbic">Nueva ubicación</label><input id="newUbic" placeholder="Ej: CALLE 127"/></div>
+            <div class="col-4 align-end"><button id="btnAddUbic" class="btn primary" type="button">Agregar</button></div>
+          </div>
+          <table class="table" id="tablaUbic">
+            <thead><tr><th>Ubicación</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="col-6">
+          <h4>Línea de negocio</h4>
+          <div class="row" style="margin-bottom:8px">
+            <div class="col-8"><label for="newLinea">Nueva línea</label><input id="newLinea" placeholder="Ej: METROLOGIA"/></div>
+            <div class="col-4 align-end"><button id="btnAddLinea" class="btn primary" type="button">Agregar</button></div>
+          </div>
+          <table class="table" id="tablaLinea">
+            <thead><tr><th>Línea</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="col-6">
+          <h4>Clases de inventario</h4>
+          <div class="row" style="margin-bottom:8px">
+            <div class="col-8"><label for="newClase">Nueva clase</label><input id="newClase" placeholder="Ej: ACTIVO FIJO"/></div>
+            <div class="col-4 align-end"><button id="btnAddClase" class="btn primary" type="button">Agregar</button></div>
+          </div>
+          <table class="table" id="tablaClase">
+            <thead><tr><th>Clase</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="col-12" style="margin-top:8px"><h3>Usuarios</h3></div>
+        <div class="col-6">
+          <h4>Logo de la empresa</h4>
+          <div class="row" style="margin-bottom:8px">
+            <div class="col-12"><input id="fileLogo" type="file" accept="image/*"/></div>
+            <div class="col-12"><div id="logoPreview" class="preview">Sin logo</div></div>
+            <div class="col-12 right"><button id="btnClearLogo" class="btn danger">Quitar logo</button></div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="row" style="margin-bottom:8px">
+            <div class="col-3"><label for="admUser">Usuario</label><input id="admUser"/></div>
+            <div class="col-3"><label for="admRol">Rol</label>
+              <select id="admRol">
+                <option value="Operador">Operador</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+            <div class="col-3"><label for="admPin">PIN</label><input id="admPin" type="password"/></div>
+            <div class="col-3"><label for="admPin2">Confirmar PIN</label><input id="admPin2" type="password"/></div>
+            <div class="col-12 right"><button id="btnAddUser" class="btn success" type="button">Crear usuario</button></div>
+          </div>
+          <table class="table" id="tablaUsers">
+            <thead><tr><th>Usuario</th><th>Rol</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="col-12"><div id="admMsg" class="hint"></div></div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
